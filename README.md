@@ -2,7 +2,7 @@
 
 <img src="https://pub-9030d6e053cc40b380e0f63662daf8ed.r2.dev/logo.png" alt="THISJOWI Logo" width="200"/>
 
-# 🚀 THISJOWI Backend
+# 🚀 THISJOWI Server
 
 ### Modern Microservices Architecture with Spring Boot
 
