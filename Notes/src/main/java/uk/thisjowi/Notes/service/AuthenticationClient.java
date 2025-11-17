@@ -29,7 +29,7 @@ public class AuthenticationClient {
 
     public Long getUserIdFromToken(String token) {
         String headerValue = token != null && token.startsWith("Bearer ") ? token : ("Bearer " + token);
-        log.debug("Calling Authentication service /user with Authorization='{}'", headerValue);
+        log.debug("Calling Authentication service /user to validate token");
 
         Mono<Long> mono = authenticationWebClient.get()
                 .uri("/user")

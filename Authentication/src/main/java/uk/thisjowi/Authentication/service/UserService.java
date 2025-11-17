@@ -156,11 +156,11 @@ public class UserService {
                 emailCache.evict(user.getEmail());
             }
             
-            // Enviar evento a Kafka
-            kafkaProducerService.sendMessage("auth-events", "User saved: " + user.getUsername());
+            // Send event to Kafka
+            kafkaProducerService.sendMessage("auth-events", "User saved: ID=" + user.getId());
             return user;
         } catch (Exception e) {
-            log.error("Error saving user {}: {}", user.getUsername(), e.getMessage(), e);
+            log.error("Error saving user ID {}: {}", user.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to save user: " + e.getMessage(), e);
         }
     }

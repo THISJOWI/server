@@ -18,16 +18,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // CSRF is disabled because this is a stateless API using JWT tokens
+        // Clients authenticate via bearer tokens, not session cookies
+        // lgtm[java/spring-disabled-csrf-protection]
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Allow all requests to /api/v1/passwords (authentication is done via JWT token in controller)
-                        .requestMatchers("/api/v1/passwords", "/api/v1/passwords/**").permitAll()
-                        // Allow Eureka health checks
-                        .requestMatchers("/actuator/**", "/health", "/info").permitAll()
-                        // Deny all other requests
+                        .requestMatchers("/api/v1/passwords/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/health").permitAll()
+                        .requestMatchers("/info").permitAll()
                         .anyRequest().authenticated()
                 );
 

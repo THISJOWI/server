@@ -234,11 +234,4 @@ public class AuthRestController {
                     .body(Map.of("success", false, "message", "Error deleting account: " + errorMessage));
         }
     }
-
-    @GetMapping("/validate")
-    public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String token) {
-        // TODO: Implement logic to validate the token
-        // For now returning true as an example
-        return ResponseEntity.ok(true);
-    }
 }

@@ -2,9 +2,6 @@ package uk.thisjowi.Authentication.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uk.thisjowi.Authentication.dto.ChangePasswordRequest;
@@ -23,16 +20,13 @@ public class ChangePasswordService {
 
     private static final Logger log = LoggerFactory.getLogger(ChangePasswordService.class);
 
-    private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public ChangePasswordService(AuthenticationManager authenticationManager,
-                                 UserService userService,
+    public ChangePasswordService(UserService userService,
                                  PasswordEncoder passwordEncoder,
                                  JwtUtil jwtUtil) {
-        this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
@@ -133,29 +127,39 @@ public class ChangePasswordService {
             return result;
         }
 
-        // Check for at least one uppercase letter
-        if (!password.matches(".*[A-Z].*")) {
+        // Check password character requirements using linear iteration (prevents ReDoS)
+        boolean hasUpper = false;
+        boolean hasLower = false;
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
+        String specialChars = "!@#$%^&*()_+-=[]{}; ':\"\\|,.<>?/";
+        
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) hasUpper = true;
+            else if (Character.isLowerCase(c)) hasLower = true;
+            else if (Character.isDigit(c)) hasDigit = true;
+            else if (specialChars.indexOf(c) >= 0) hasSpecial = true;
+        }
+        
+        if (!hasUpper) {
             result.put("isValid", false);
             result.put("error", "Password must contain at least one uppercase letter");
             return result;
         }
-
-        // Check for at least one lowercase letter
-        if (!password.matches(".*[a-z].*")) {
+        
+        if (!hasLower) {
             result.put("isValid", false);
             result.put("error", "Password must contain at least one lowercase letter");
             return result;
         }
-
-        // Check for at least one digit
-        if (!password.matches(".*\\d.*")) {
+        
+        if (!hasDigit) {
             result.put("isValid", false);
             result.put("error", "Password must contain at least one digit");
             return result;
         }
-
-        // Check for at least one special character
-        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>?/].*")) {
+        
+        if (!hasSpecial) {
             result.put("isValid", false);
             result.put("error", "Password must contain at least one special character (!@#$%^&*...)");
             return result;
