@@ -6,18 +6,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
- * EncryptionUtil provides AES-256-CBC encryption/decryption with random IV.
+ * EncryptionUtil provides AES-256-GCM encryption/decryption with random IV.
  * The encryption key is loaded from the environment variable (JWT_SECRET).
  * 
  * ✓ AES-256 (256-bit key)
- * ✓ CBC mode with random IV
- * ✓ PKCS5 padding
+ * ✓ GCM mode with random IV (authenticated encryption)
+ * ✓ No padding (GCM doesn't need it)
  * ✓ Secure key from environment
  * ✓ Proper logging without exposing data
  */
@@ -25,9 +25,10 @@ import java.util.Base64;
 public class Encryption {
     private static final Logger log = LoggerFactory.getLogger(Encryption.class);
     
-    private static final String AES_ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
     private static final int AES_KEY_SIZE = 32;  // 256 bits
-    private static final int IV_SIZE = 16;       // 128 bits
+    private static final int IV_SIZE = 12;       // 96 bits (GCM standard)
+    private static final int TAG_SIZE = 128;     // 128 bits authentication tag
     
     private final String secretKey;
     private volatile byte[] secretKeyBytes;
@@ -46,14 +47,14 @@ public class Encryption {
         }
         
         this.secretKey = jwtSecret;
-        // Preprocesar la clave (primera ejecución)
+        // Preprocess key (first execution)
         this.secretKeyBytes = deriveKeyBytes();
-        log.info("✓ EncryptionUtil initialized with AES-256-CBC");
+        log.info("✓ EncryptionUtil initialized with AES-256-GCM");
     }
 
     /**
-     * Deriva los bytes de la clave de la cadena secretKey.
-     * Usa los primeros 32 bytes (256 bits) para AES-256.
+     * Derives key bytes from the secretKey string.
+     * Uses the first 32 bytes (256 bits) for AES-256.
      */
     private byte[] deriveKeyBytes() {
         byte[] keyBytes = new byte[AES_KEY_SIZE];
@@ -63,8 +64,8 @@ public class Encryption {
     }
 
     /**
-     * Encripta una cadena usando AES-256-CBC con IV aleatorio.
-     * El IV se prepende al ciphertext antes de codificar en Base64.
+     * Encrypts a string using AES-256-GCM with random IV.
+     * The IV is prepended to the ciphertext before encoding in Base64.
      */
     public String encrypt(String plaintext) {
         if (plaintext == null) {
@@ -72,26 +73,26 @@ public class Encryption {
         }
         
         try {
-            // Generar IV aleatorio
+            // Generate random IV
             byte[] iv = new byte[IV_SIZE];
             SecureRandom random = new SecureRandom();
             random.nextBytes(iv);
             
-            // Inicializar cifrador con IV
+            // Initialize cipher with GCM parameters
             Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
             SecretKeySpec keySpec = new SecretKeySpec(secretKeyBytes, 0, AES_KEY_SIZE, "AES");
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(TAG_SIZE, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
             
-            // Encriptar
+            // Encrypt
             byte[] encrypted = cipher.doFinal(plaintext.getBytes("UTF-8"));
             
-            // Combinar IV + ciphertext
+            // Combine IV + ciphertext
             byte[] combined = new byte[IV_SIZE + encrypted.length];
             System.arraycopy(iv, 0, combined, 0, IV_SIZE);
             System.arraycopy(encrypted, 0, combined, IV_SIZE, encrypted.length);
             
-            // Codificar en Base64
+            // Encode in Base64
             String result = Base64.getEncoder().encodeToString(combined);
             log.debug("Encrypted {} bytes of data", plaintext.length());
             return result;
@@ -130,13 +131,13 @@ public class Encryption {
             System.arraycopy(combined, 0, iv, 0, IV_SIZE);
             System.arraycopy(combined, IV_SIZE, encrypted, 0, encrypted.length);
             
-            // Inicializar cifrador con IV
+            // Initialize cipher with GCM parameters
             Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
             SecretKeySpec keySpec = new SecretKeySpec(secretKeyBytes, 0, AES_KEY_SIZE, "AES");
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(TAG_SIZE, iv);
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
             
-            // Desencriptar
+            // Decrypt
             byte[] decrypted = cipher.doFinal(encrypted);
             String result = new String(decrypted, "UTF-8");
             log.debug("Decrypted {} bytes of data successfully", encrypted.length);
