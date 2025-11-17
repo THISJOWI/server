@@ -257,7 +257,7 @@ The copyright holder reserves the right to modify this license for future versio
 ║                          END OF LICENSE                                   ║
 ║                                                                           ║
 ║              For more information, visit our repository                   ║
-║                  https://github.com/THISJowi/THISJOWI                     ║
+║                  https://github.com/THISJOWI/server                       ║
 ║                                                                           ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 ```
