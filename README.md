@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/THISJOWI/THISJOWI2/main/application/assets/logo.png" alt="THISJOWI Logo" width="200"/>
+<img src="https://pub-9030d6e053cc40b380e0f63662daf8ed.r2.dev/logo.png" alt="THISJOWI Logo" width="200"/>
 
 # 🚀 THISJOWI Backend
 
@@ -11,7 +11,7 @@
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.0-green?style=for-the-badge)](https://spring.io/projects/spring-cloud)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENCE.md)
 
 [🎯 Features](#-features) •
 [🏗️ Architecture](#️-architecture) •
@@ -1162,7 +1162,15 @@ Security is a top priority. Please:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **THISJOWI Proprietary Source License**.
+
+- ✅ **Allowed:** Personal use, commercial use within your organization, modifications for internal use
+- ❌ **Restricted:** Redistribution, SaaS offerings, sublicensing without authorization
+- 💰 **Redistribution:** Requires separate agreement and royalties
+
+See the [LICENCE.md](LICENCE.md) file for complete terms and conditions.
+
+For redistribution inquiries: **contact@thisjowi.uk**
 
 ---
 
@@ -1313,7 +1321,7 @@ For commercial support, consulting, or custom development:
 
 **Made with ❤️ by THISJowi**
 
-[🌐 Website](https://thisjowi.uk) • [📚 Documentation](https://thisjowi.uk) • [🐛 Issues](../../issues) • [🤝 Contributing](CONTRIBUTING.md) • [🔒 Security](SECURITY.md)
+[🌐 Website](https://thisjowi.uk) • [📚 Documentation](https://thisjowi.uk) • [🐛 Issues](../../issues) • [🤝 Contributing](CONTRIBUTING.md) • [� License](LICENCE.md)
 
 [Back to Top](#-thisjowi-backend)
 
