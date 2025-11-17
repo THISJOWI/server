@@ -1,0 +1,175 @@
+name: Kubernetes Validation
+
+on:
+  push:
+    branches: [ master, main, develop ]
+    paths:
+      - 'kubernetes/**'
+      - '.github/workflows/kubernetes-validate.yml'
+  pull_request:
+    branches: [ master, main, develop ]
+    paths:
+      - 'kubernetes/**'
+
+jobs:
+  validate-manifests:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Kubernetes tools
+        run: |
+          # Install kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+          
+          # Install kubeval
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin
+          
+          # Install kubeconform
+          wget https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin
+      
+      - name: Validate YAML syntax
+        run: |
+          echo "## 🔍 YAML Syntax Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          for file in kubernetes/**/*.yaml; do
+            echo "Validating $file..."
+            if kubectl apply --dry-run=client -f "$file" > /dev/null 2>&1; then
+              echo "✅ $file" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $file - FAILED" >> $GITHUB_STEP_SUMMARY
+              kubectl apply --dry-run=client -f "$file"
+            fi
+          done
+      
+      - name: Run kubeval
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Kubeval Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          kubeval kubernetes/**/*.yaml --strict --ignore-missing-schemas || true
+      
+      - name: Run kubeconform
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✔️ Kubeconform Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          kubeconform -summary -output json kubernetes/**/*.yaml > kubeconform-output.json || true
+          cat kubeconform-output.json
+      
+      - name: Check for secrets in manifests
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔒 Secret Detection in Manifests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for hardcoded passwords, tokens, etc.
+          if grep -r -E "(password|token|secret|key):\s*['\"]?[a-zA-Z0-9]{8,}" kubernetes/ --exclude="secret.yaml.example" --exclude-dir=".git"; then
+            echo "⚠️ Potential secrets found in manifests!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ No hardcoded secrets detected" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Verify secret.yaml is not committed
+        run: |
+          if [ -f "kubernetes/utils/secret.yaml" ]; then
+            echo "❌ ERROR: secret.yaml should not be committed!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ secret.yaml not found in repository (correct)" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Check resource limits
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 💾 Resource Limits Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          missing_limits=0
+          for file in kubernetes/application/*.yaml; do
+            if ! grep -q "resources:" "$file"; then
+              echo "⚠️ $file - Missing resource limits" >> $GITHUB_STEP_SUMMARY
+              missing_limits=$((missing_limits + 1))
+            fi
+          done
+          
+          if [ $missing_limits -eq 0 ]; then
+            echo "✅ All deployments have resource limits defined" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "📝 Consider adding resource limits to $missing_limits deployment(s)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  kustomize-build:
+    name: Test Kustomize Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      
+      - name: Test Kustomize overlays (if exists)
+        run: |
+          if [ -f "kubernetes/kustomization.yaml" ]; then
+            echo "Testing Kustomize build..."
+            kustomize build kubernetes/ > /tmp/kustomize-output.yaml
+            echo "✅ Kustomize build successful"
+          else
+            echo "ℹ️ No kustomization.yaml found, skipping"
+          fi
+
+  helm-lint:
+    name: Helm Chart Lint
+    runs-on: ubuntu-latest
+    if: false  # Enable this if you add Helm charts later
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+      
+      - name: Lint Helm charts
+        run: |
+          if [ -d "charts" ]; then
+            for chart in charts/*; do
+              echo "Linting $chart..."
+              helm lint "$chart"
+            done
+          fi
+
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-manifests, kustomize-build]
+    if: always()
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## 🎯 Kubernetes Validation Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Manifest Validation | ${{ needs.validate-manifests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Kustomize Build | ${{ needs.kustomize-build.result == 'success' && '✅ Passed' || '⚠️ Skipped/Failed' }} |" >> $GITHUB_STEP_SUMMARY

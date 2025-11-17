@@ -1,0 +1,90 @@
+name: CI - Build & Test
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+
+jobs:
+  build-and-test:
+    name: Build & Test Microservices
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service: [Authentication, Notes, Password, Cloud, Eureka]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+      
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      
+      - name: Build ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          ./mvnw clean compile -B
+      
+      - name: Run Tests ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          ./mvnw test -B
+      
+      - name: Generate Test Report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test Results - ${{ matrix.service }}
+          path: ${{ matrix.service }}/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: false
+      
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.service }}
+          path: ${{ matrix.service }}/target/surefire-reports/
+      
+      - name: Package ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          ./mvnw package -DskipTests -B
+      
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: ${{ matrix.service }}/target/*.jar
+          retention-days: 7
+
+  status-check:
+    name: CI Status Check
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: always()
+    
+    steps:
+      - name: Check build status
+        run: |
+          if [ "${{ needs.build-and-test.result }}" == "success" ]; then
+            echo "✅ All microservices built successfully!"
+            exit 0
+          else
+            echo "❌ Some microservices failed to build"
+            exit 1
+          fi
