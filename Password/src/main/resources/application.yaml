@@ -1,0 +1,77 @@
+spring:
+  application:
+    name: password-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/password
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # can be: none, validate, update, create, create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # Temporarily disable Spring Cloud / Spring Boot compatibility verifier so the app can start
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+server:
+  port: ${PASSWORD_SERVICE_PORT}
+  # Allow connections from any network interface (not just localhost)
+  address: 0.0.0.0
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: http://${EUREKA_HOST}:${EUREKA_PORT}/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    uk.thisjowi.Password: DEBUG
+
+kafka:
+  topic:
+    auth-events: auth-events
+
+auth:
+  service:
+    url: http://${CLOUD_GATEWAY_HOST}:${CLOUD_GATEWAY_PORT}/api/auth
+
+# JWT secret used to verify tokens locally if Authentication service is unavailable.
+# Ideally both services should load the same secret from Vault or an environment
+# variable. This default matches the Authentication service fallback `jwt.secret`.
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
+    consumer:
+      group-id: password-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  docker:
+    compose:
+      enabled: false

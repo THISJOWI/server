@@ -1,0 +1,34 @@
+# Archivos de secretos - NO SUBIR A GIT
+kubernetes/utils/secret.yaml
+kubernetes/templates/
+
+# Logs y archivos temporales
+*.log
+*.log.*
+logs/
+app.log
+server.log
+
+# Variables de entorno locales
+.env
+.env.local
+.env.*.local
+
+# Carpetas de secretos
+secrets/
+credentials/
+
+# Build artifacts
+**/target/
+**/build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db

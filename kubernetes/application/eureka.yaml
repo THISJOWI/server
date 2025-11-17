@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka-server
+  template:
+    metadata:
+      labels:
+        app: eureka-server
+    spec:
+      containers:
+        - name: eureka-server
+          image: thsjowi/eureka:1.0.0
+          ports:
+            - containerPort: 8761
+          env:
+            - name: EUREKA_PORT
+              value: "8761"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-server
+  labels:
+    app: eureka-server
+spec:
+  selector:
+    app: eureka-server
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8761         # port within the cluster
+      targetPort: 8761    # container port
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-server-nodeport
+  labels:
+    app: eureka-server-nodeport
+spec:
+  selector:
+    app: eureka-server
+  type: NodePort
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8761          # internal Service port (within the cluster)
+      targetPort: 8761    # container port
+      nodePort: 30876     # port on the node (must be between 30000-32767)
+

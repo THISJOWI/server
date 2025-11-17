@@ -1,0 +1,116 @@
+---
+# StatefulSet para CockroachDB
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cockroachdb
+spec:
+  serviceName: cockroachdb
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cockroachdb
+  template:
+    metadata:
+      labels:
+        app: cockroachdb
+    spec:
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:latest
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8080
+          name: http
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            exec /cockroach/cockroach start \
+            --insecure \
+            --advertise-host=$(hostname -f) \
+            --http-addr=0.0.0.0:8080 \
+            --join=cockroachdb-0.cockroachdb,cockroachdb-1.cockroachdb,cockroachdb-2.cockroachdb \
+            --cache=25% \
+            --max-sql-memory=25%
+        volumeMounts:
+        - name: datadir
+          mountPath: /cockroach/cockroach-data
+        env:
+        - name: COCKROACH_CHANNEL
+          value: kubernetes-insecure
+      terminationGracePeriodSeconds: 60
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+# ClusterIP Service para comunicación interna
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb
+  labels:
+    app: cockroachdb
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: cockroachdb
+  ports:
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  - port: 8080
+    targetPort: 8080
+    name: http
+
+---
+# NodePort Service para exponer el puerto 8080 externamente
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb-public
+  labels:
+    app: cockroachdb
+spec:
+  type: NodePort
+  selector:
+    app: cockroachdb
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 30080
+    name: http
+    protocol: TCP
+  - port: 26257
+    targetPort: 26257
+    nodePort: 30257
+    name: grpc
+    protocol: TCP
+
+---
+# Job para inicializar el cluster (ejecutar una sola vez)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cockroachdb-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: cluster-init
+        image: cockroachdb/cockroach:latest
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            /cockroach/cockroach init --insecure --host=cockroachdb-0.cockroachdb
+      restartPolicy: OnFailure
