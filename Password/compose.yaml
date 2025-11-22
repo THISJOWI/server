@@ -1,18 +1,25 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker Compose reference guide at
-# https://docs.docker.com/go/compose-spec-reference/
-
-# Here the instructions define your application as a service called "server".
-# This service is built from the Dockerfile in the current directory.
-# You can add other services your application may depend on here, such as a
-# database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesome-compose
 services:
-  server:
+  password-service:
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: password-service
     ports:
-      - 8084:8084
+      - "8084:8084"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - microservices-network
+    depends_on:
+      - config-server
+      - eureka-server
+
+networks:
+  microservices-network:
+    external: true
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to

@@ -14,18 +14,11 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: thsjowi/auth:1.0.1
+          image: thsjowi/auth:1.1.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:
-            - name: AUTH_SERVICE_PORT
-              value: "8082"
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: app-secrets
-                  key: db-host
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
@@ -41,16 +34,16 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: db-password
-            - name: REDIS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: app-secrets
-                  key: redis-host
             - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
                   key: redis-port
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: redis-password
             - name: KAFKA_HOST
               valueFrom:
                 secretKeyRef:

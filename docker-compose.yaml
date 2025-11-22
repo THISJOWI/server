@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # Config Server - debe iniciarse primero
+  config-server:
+    build:
+      context: ./Configuration
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - CONFIG_SERVER_PORT=8888
+      - CONFIG_GIT_URI=${CONFIG_GIT_URI:-https://github.com/THISJOWI/configuration}
+      - CONFIG_GIT_BRANCH=${CONFIG_GIT_BRANCH:-master}
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Eureka Server - depende del Config Server
+  eureka-server:
+    build:
+      context: ./Eureka
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+    networks:
+      - microservices-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # API Gateway - depende de Config Server y Eureka
+  api-gateway:
+    build:
+      context: ./Cloud
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8081:8081"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - microservices-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./Authentication
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8082:8082"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - microservices-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # Notes Service
+  notes-service:
+    build:
+      context: ./Notes
+      dockerfile: Dockerfile
+    container_name: notes-service
+    ports:
+      - "8083:8083"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - microservices-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # Password Service
+  password-service:
+    build:
+      context: ./Password
+      dockerfile: Dockerfile
+    container_name: password-service
+    ports:
+      - "8084:8084"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - microservices-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  # Admin Server
+  admin-server:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: admin-server
+    ports:
+      - "8090:8090"
+    environment:
+      - CONFIG_SERVER_HOST=config-server
+      - CONFIG_SERVER_PORT=8888
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    networks:
+      - microservices-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+networks:
+  microservices-network:
+    driver: bridge

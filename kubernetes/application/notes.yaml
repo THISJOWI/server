@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: notes-service
-          image: thsjowi/notes:1.0.0
+          image: thsjowi/notes:1.1.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8083
@@ -27,13 +27,6 @@ spec:
               cpu: "500m"
           
           env:
-            - name: NOTES_SERVICE_PORT
-              value: "8083"
-            - name: DB_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: app-secrets
-                  key: db-host
             - name: DB_PORT
               valueFrom:
                 secretKeyRef:
@@ -59,14 +52,6 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: kafka-port
-            - name: EUREKA_HOST
-              value: "eureka-server"
-            - name: EUREKA_PORT
-              value: "8761"
-            - name: AUTH_SERVICE_HOST
-              value: "auth-service"
-            - name: AUTH_SERVICE_PORT
-              value: "8082"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

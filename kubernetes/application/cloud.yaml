@@ -14,15 +14,10 @@ spec:
     spec:
       containers:
         - name: gateway-service
-          image: thsjowi/cloud:1.0.2
+          image: thsjowi/cloud:1.1.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8100
-          env:
-            - name: EUREKA_HOST
-              value: "eureka-server"
-            - name: EUREKA_PORT
-              value: "8761"
 
 ---
 apiVersion: v1
