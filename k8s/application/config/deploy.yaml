@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: config-server
-        image: thsjowi/config:1.0.0
+        image: thsjowi/config:latest
         ports:
         - containerPort: 8888
           name: http
