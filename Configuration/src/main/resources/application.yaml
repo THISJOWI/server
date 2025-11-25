@@ -12,9 +12,7 @@ spring:
           force-pull: true
           timeout: 10
           search-paths: '{application}'
-        # Permite sobrescribir configuraciones con variables de entorno
-        overrides:
-          # Aquí puedes poner configuraciones que SIEMPRE se aplican, sin importar el repo Git
+        # overrides:
 
 server:
   port: 8888

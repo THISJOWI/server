@@ -68,25 +68,29 @@ RUN java -Djarmode=layertools -jar target/app.jar extract --destination target/e
 # eclipse-temurin@sha256:99cede493dfd88720b610eb8077c8688d3cca50003d76d1d539b0efc8cca72b4.
 FROM eclipse-temurin:21-jre-jammy AS final
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
 ARG UID=10001
 RUN adduser \
     --disabled-password \
     --gecos "" \
-    --home "/nonexistent" \
+    --home "/home/appuser" \
     --shell "/sbin/nologin" \
-    --no-create-home \
     --uid "${UID}" \
-    appuser
+    appuser && \
+    mkdir -p /home/appuser/.config && \
+    chown -R appuser:appuser /home/appuser
+
 USER appuser
 
-# Copy the executable from the "package" stage.
-COPY --from=extract build/target/extracted/dependencies/ ./
-COPY --from=extract build/target/extracted/spring-boot-loader/ ./
-COPY --from=extract build/target/extracted/snapshot-dependencies/ ./
-COPY --from=extract build/target/extracted/application/ ./
+WORKDIR /home/appuser
+
+ENV HOME=/home/appuser
+ENV XDG_CONFIG_HOME=/home/appuser/.config
+
+COPY --from=extract --chown=appuser:appuser build/target/extracted/dependencies/ ./
+COPY --from=extract --chown=appuser:appuser build/target/extracted/spring-boot-loader/ ./
+COPY --from=extract --chown=appuser:appuser build/target/extracted/snapshot-dependencies/ ./
+COPY --from=extract --chown=appuser:appuser build/target/extracted/application/ ./
 
 EXPOSE 8888
 
-ENTRYPOINT [ "java", "org.springframework.boot.loader.launch.JarLauncher" ]
+ENTRYPOINT [ "java", "-Duser.home=/home/appuser", "org.springframework.boot.loader.launch.JarLauncher" ]
