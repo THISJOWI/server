@@ -6,7 +6,7 @@ metadata:
     app: admin-server-nodeport
 spec:
   selector:
-    app: admin-server-nodeport
+    app: admin-server
   type: NodePort
   ports:
     - name: http

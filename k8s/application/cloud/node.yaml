@@ -6,7 +6,7 @@ metadata:
     app: gateway-service-nodeport
 spec:
   selector:
-    app: gateway-service-nodeport
+    app: gateway-service
   type: NodePort
   ports:
     - name: http

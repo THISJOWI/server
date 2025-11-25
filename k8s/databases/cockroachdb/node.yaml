@@ -6,7 +6,7 @@ metadata:
     app: cockroachdb-nodeport
 spec:
   selector:
-    app: cockroachdb-nodeport
+    app: cockroachdb
   type: NodePort
   ports:
     - name: http
