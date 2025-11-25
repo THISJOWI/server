@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: admin-server
+  name: api-gateway
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     
@@ -9,13 +9,13 @@ spec:
   ingressClassName: nginx 
   
   rules:
-  - host: admin.thisjowi.uk
+  - host: gateway.thisjowi.uk
     http:
       paths:
-      - path: /admin
+      - path: /gateway
         pathType: Prefix
         backend:
           service:
-            name: admin-server
+            name: api-gateway
             port:
-              number: 8090
+              number: 8100
