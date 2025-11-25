@@ -6,7 +6,7 @@ metadata:
     app: eureka-server-nodeport
 spec:
   selector:
-    app: eureka-server-nodeport
+    app: eureka-server
   type: NodePort
   ports:
     - name: http
