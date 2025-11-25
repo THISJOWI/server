@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keydb-config
+data:
+  keydb.conf: |
+    # KeyDB Configuration for THISJOWI
+    port 6379
+    bind 0.0.0.0
+    
+    # Memory management
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    
+    # Persistence
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfsync everysec
+    
+    # Security
+    requirepass ""
+    
+    # Logging
+    loglevel notice
+    logfile ""
+    
+    # Database
+    databases 16
+    
+    # Replication
+    repl-diskless-sync no
+    repl-diskless-sync-delay 5
+    
+    # Threading
+    server-threads 4
+    server-thread-affinity true

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: password-service
+  name: notes-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: password-service
+      app: notes-service
   template:
     metadata:
       labels:
-        app: password-service
+        app: notes-service
     spec:
       containers:
-        - name: password-service
-          image: thsjowi/password:1.0.0
+        - name: notes-service
+          image: thsjowi/notes:1.1.1
           imagePullPolicy: Always
           ports:
-            - containerPort: 8084
+            - containerPort: 8083
           resources:
             requests:
               memory: "256Mi"
@@ -57,20 +57,3 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: jwt-secret
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: password-service
-  labels:
-    app: password-service
-spec:
-  selector:
-    app: password-service
-  ports:
-    - name: http
-      protocol: TCP
-      port: 8084
-      targetPort: 8084
-  type: ClusterIP

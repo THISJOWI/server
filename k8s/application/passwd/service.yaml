@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: password-service
+  labels:
+    app: password-service
+spec:
+  selector:
+    app: password-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8084
+      targetPort: 8084
+  type: ClusterIP

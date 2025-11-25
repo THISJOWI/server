@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cockroachdb-init
+spec:
+  template:
+    spec:
+      containers:
+      - name: cluster-init
+        image: cockroachdb/cockroach:latest
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            /cockroach/cockroach init --insecure --host=cockroachdb-0.cockroachdb
+      restartPolicy: OnFailure
