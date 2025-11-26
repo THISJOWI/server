@@ -54,16 +54,6 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: kafka-port
-            - name: EUREKA_HOST
-              value: "eureka-server"
-            - name: EUREKA_PORT
-              value: "8761"
-            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
-              value: "false"
-            - name: EUREKA_INSTANCE_HOSTNAME
-              value: "auth-service"   # matches the Service name
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: "http://eureka-server:8761/eureka/"
             - name: VAULT_HOST
               valueFrom:
                 secretKeyRef:

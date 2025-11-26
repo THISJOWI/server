@@ -86,6 +86,12 @@
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-bootstrap -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bootstrap</artifactId>
+			<version>4.3.0</version>
+		</dependency>
 
 		<!-- SpringDoc OpenAPI UI for Spring Cloud Gateway -->
 		<dependency>
