@@ -133,6 +133,8 @@ public class UserService {
     @CachePut(cacheNames = "usersByUsername", key = "#result.username")
     public User saveUser(User user) {
         try {
+            boolean isNewUser = (user.getId() == null);
+            
             // If user has an ID, make sure we merge it to attach to the session
             if (user.getId() != null) {
                 log.debug("Updating existing user with ID: {}", user.getId());
@@ -156,8 +158,14 @@ public class UserService {
                 emailCache.evict(user.getEmail());
             }
             
-            // Send event to Kafka
-            kafkaProducerService.sendMessage("auth-events", "User saved: ID=" + user.getId());
+            // Send event to Kafka when a new user is registered
+            if (isNewUser) {
+                kafkaProducerService.sendUserRegisteredEvent(user);
+                log.info("User registered event sent to Kafka for user: {} (ID: {})", user.getUsername(), user.getId());
+            } else {
+                kafkaProducerService.sendMessage("auth-events", "User updated: ID=" + user.getId());
+            }
+            
             return user;
         } catch (Exception e) {
             log.error("Error saving user ID {}: {}", user.getId(), e.getMessage(), e);

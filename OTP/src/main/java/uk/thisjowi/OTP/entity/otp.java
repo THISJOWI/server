@@ -19,6 +19,9 @@ public class otp {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = true)
+    private Long userId;
+
     @Column(nullable = false)
     private String user;
 

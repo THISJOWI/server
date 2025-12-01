@@ -1,4 +1,4 @@
-package main.java.uk.thisjowi.OTP.model;
+package uk.thisjowi.OTP.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

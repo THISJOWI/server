@@ -1,4 +1,4 @@
-package uk.thisjowi.configuration;
+package uk.thisjowi.Configuration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

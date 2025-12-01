@@ -1,8 +1,12 @@
 package uk.thisjowi.OTP.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.thisjowi.OTP.dto.OtpCreatedEvent;
 import uk.thisjowi.OTP.entity.otp;
+import uk.thisjowi.OTP.kafka.KafkaProducerService;
 import uk.thisjowi.OTP.repository.OtpRepository;
 
 import java.security.SecureRandom;
@@ -13,8 +17,14 @@ import java.util.Optional;
 
 @Service
 public class OtpService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(OtpService.class);
+    
     @Autowired
     private OtpRepository otpRepository;
+    
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
 
     public List<otp> getAllOtps() {
         return otpRepository.findAll();
@@ -31,7 +41,58 @@ public class OtpService {
         o.setValid(true);
         o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);
         o.setSecret(generateSecret());
-        return otpRepository.save(o);
+        otp saved = otpRepository.save(o);
+        
+        // Send Kafka event when OTP is created
+        try {
+            OtpCreatedEvent event = new OtpCreatedEvent(
+                saved.getId(),
+                null, // userId will be set if available
+                user,
+                type,
+                "OTP_CREATED",
+                Instant.now().getEpochSecond(),
+                saved.getExpiresAt()
+            );
+            kafkaProducerService.sendOtpCreatedEvent(event);
+        } catch (Exception e) {
+            logger.error("Error sending OTP created event to Kafka", e);
+        }
+        
+        return saved;
+    }
+    
+    /**
+     * Create OTP for a specific user with userId
+     */
+    public otp createOtpForUser(Long userId, String username, String type, long validitySeconds) {
+        otp o = new otp();
+        o.setUserId(userId);
+        o.setUser(username);
+        o.setType(type);
+        o.setValid(true);
+        o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);
+        o.setSecret(generateSecret());
+        otp saved = otpRepository.save(o);
+        
+        // Send Kafka event with userId when OTP is created
+        try {
+            OtpCreatedEvent event = new OtpCreatedEvent(
+                saved.getId(),
+                userId,
+                username,
+                type,
+                "OTP_CREATED",
+                Instant.now().getEpochSecond(),
+                saved.getExpiresAt()
+            );
+            kafkaProducerService.sendOtpCreatedEvent(event);
+            logger.info("OTP created for user: {} with userId: {}", username, userId);
+        } catch (Exception e) {
+            logger.error("Error sending OTP created event to Kafka", e);
+        }
+        
+        return saved;
     }
 
     public otp updateOtp(Long id, otp updatedOtp) {
