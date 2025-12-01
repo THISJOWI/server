@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: otp-service
+  labels:
+    app: otp-service
+spec:
+  selector:
+    app: otp-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8085
+      targetPort: 8085
+  type: ClusterIP

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otp-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otp-service
+  template:
+    metadata:
+      labels:
+        app: otp-service
+    spec:
+      containers:
+        - name: otp-service
+          image: thsjowi/otp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          
+          env:
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db-port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db-password
+            - name: KAFKA_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: kafka-host
+            - name: KAFKA_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: kafka-port
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
