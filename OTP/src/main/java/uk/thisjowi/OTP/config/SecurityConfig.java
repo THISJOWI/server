@@ -15,17 +15,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configure(http))
+            .cors(cors -> cors.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Actuator endpoints para health checks
-                .requestMatchers("/actuator/**").permitAll()
-                // Swagger/OpenAPI
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                // Permitir todos los endpoints de OTP (ajusta según tus necesidades)
-                .requestMatchers("/api/**").permitAll()
-                .anyRequest().permitAll()
-            );
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
         return http.build();
     }
