@@ -1,6 +1,6 @@
 spring:
   application:
-    name: OTP
+    name: otp-service
 
   cloud:
     config:
