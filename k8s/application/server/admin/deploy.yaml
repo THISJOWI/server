@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: admin-server
-        image: thsjowi/admin:1.0.0
+        image: thsjowi/admin:latest
         ports:
         - containerPort: 8090
           name: http

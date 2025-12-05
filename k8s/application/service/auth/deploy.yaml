@@ -1,31 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notes-service
+  name: auth-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: notes-service
+      app: auth-service
   template:
     metadata:
       labels:
-        app: notes-service
+        app: auth-service
     spec:
       containers:
-        - name: notes-service
-          image: thsjowi/notes:1.1.1
+        - name: auth-service
+          image: thsjowi/auth:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8083
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "250m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
-          
+            - containerPort: 8082
           env:
             - name: DB_PORT
               valueFrom:
@@ -42,6 +34,16 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: db-password
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: redis-port
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: redis-password
             - name: KAFKA_HOST
               valueFrom:
                 secretKeyRef:
@@ -52,6 +54,21 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: kafka-port
+            - name: VAULT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: vault-host
+            - name: VAULT_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: vault-port
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: vault-token
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

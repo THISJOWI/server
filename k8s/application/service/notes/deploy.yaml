@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: password-service
+  name: notes-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: password-service
+      app: notes-service
   template:
     metadata:
       labels:
-        app: password-service
+        app: notes-service
     spec:
       containers:
-        - name: password-service
-          image: thsjowi/password:1.0.0
+        - name: notes-service
+          image: thsjowi/notes:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8084
+            - containerPort: 8083
           resources:
             requests:
               memory: "256Mi"
