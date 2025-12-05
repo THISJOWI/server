@@ -36,7 +36,7 @@ public class OtpService {
 
     public otp createOtp(String user, String type, long validitySeconds) {
         otp o = new otp();
-        o.setUser(user);
+        o.setUsername(user);
         o.setType(type);
         o.setValid(true);
         o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);
@@ -68,7 +68,7 @@ public class OtpService {
     public otp createOtpForUser(Long userId, String username, String type, long validitySeconds) {
         otp o = new otp();
         o.setUserId(userId);
-        o.setUser(username);
+        o.setUsername(username);
         o.setType(type);
         o.setValid(true);
         o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);

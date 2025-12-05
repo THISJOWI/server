@@ -23,7 +23,7 @@ public class otp {
     private Long userId;
 
     @Column(nullable = false)
-    private String user;
+    private String username;
 
     @Column(nullable = false)
     private String secret;
