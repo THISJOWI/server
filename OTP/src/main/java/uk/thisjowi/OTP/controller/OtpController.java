@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/otp")
+@RequestMapping("/api/v1/otp")
 public class OtpController {
 
     @Autowired
