@@ -24,7 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import uk.thisjowi.Authentication.entity.User;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthRestController {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
