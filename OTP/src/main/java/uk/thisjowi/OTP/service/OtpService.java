@@ -26,28 +26,48 @@ public class OtpService {
     @Autowired
     private KafkaProducerService kafkaProducerService;
 
-    public List<otp> getAllOtps() {
-        return otpRepository.findAll();
+    public List<otp> getAllOtps(Long userId) {
+        if (userId != null) {
+            return otpRepository.findByUserId(userId);
+        }
+        return List.of();
     }
 
     public Optional<otp> getOtp(Long id) {
         return otpRepository.findById(id);
     }
 
-    public otp createOtp(String user, String type, long validitySeconds) {
+    public otp createOtp(Long userId, String user, String type, long validitySeconds, String secret) {
+        // Check for duplicates if secret is provided
+        if (secret != null && !secret.isEmpty()) {
+            String normalizedSecret = secret.trim().replace(" ", "").toUpperCase();
+            List<otp> existing = otpRepository.findByUserId(userId);
+            for (otp entry : existing) {
+                String existingSecret = entry.getSecret();
+                if (existingSecret != null) {
+                    String normalizedExisting = existingSecret.trim().replace(" ", "").toUpperCase();
+                    if (normalizedExisting.equals(normalizedSecret)) {
+                        logger.info("Duplicate OTP creation attempt prevented for user {} with secret ending in ...{}", userId, normalizedSecret.substring(Math.max(0, normalizedSecret.length() - 4)));
+                        return entry; // Return existing entry
+                    }
+                }
+            }
+        }
+
         otp o = new otp();
+        o.setUserId(userId);
         o.setUsername(user);
         o.setType(type);
         o.setValid(true);
         o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);
-        o.setSecret(generateSecret());
+        o.setSecret((secret != null && !secret.isEmpty()) ? secret : generateSecret());
         otp saved = otpRepository.save(o);
         
         // Send Kafka event when OTP is created
         try {
             OtpCreatedEvent event = new OtpCreatedEvent(
                 saved.getId(),
-                null, // userId will be set if available
+                userId, // userId set from parameter
                 user,
                 type,
                 "OTP_CREATED",

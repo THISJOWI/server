@@ -30,8 +30,12 @@ public class OtpController {
     }
 
     @GetMapping
-    public List<otp> getAllOtps() {
-        return otpService.getAllOtps();
+    public ResponseEntity<List<otp>> getAllOtps(@RequestHeader(value = "Authorization", required = false) String token) {
+        Long userId = extractUserIdFromToken(token);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(otpService.getAllOtps(userId));
     }
 
     @GetMapping("/{id}")
@@ -41,8 +45,27 @@ public class OtpController {
     }
 
     @PostMapping
-    public otp createOtp(@RequestParam String user, @RequestParam String type, @RequestParam(defaultValue = "300") long validitySeconds) {
-        return otpService.createOtp(user, type, validitySeconds);
+    public ResponseEntity<otp> createOtp(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestParam String user, 
+            @RequestParam String type, 
+            @RequestParam(defaultValue = "300") long validitySeconds,
+            @RequestParam(required = false) String secret) {
+        
+        Long userId = extractUserIdFromToken(token);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        if (secret != null && !secret.isEmpty()) {
+             // Log masked secret for debugging
+             String masked = secret.length() > 4 ? "..." + secret.substring(secret.length() - 4) : "***";
+             System.out.println("Received createOtp request for user " + userId + " with secret: " + masked);
+        } else {
+             System.out.println("Received createOtp request for user " + userId + " without secret");
+        }
+        
+        return ResponseEntity.ok(otpService.createOtp(userId, user, type, validitySeconds, secret));
     }
 
     @PutMapping("/{id}")
@@ -59,5 +82,31 @@ public class OtpController {
     public ResponseEntity<String> validateOtp(@PathVariable Long id, @RequestParam String code) {
         boolean valid = otpService.validateOtp(id, code);
         return valid ? ResponseEntity.ok("OTP válido") : ResponseEntity.status(400).body("OTP inválido o expirado");
+    }
+
+    private Long extractUserIdFromToken(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                String[] parts = token.split("\\.");
+                if (parts.length == 3) {
+                    String payload = parts[1];
+                    int padding = 4 - (payload.length() % 4);
+                    if (padding != 4) {
+                        payload = payload + "=".repeat(padding);
+                    }
+                    byte[] decodedBytes = java.util.Base64.getUrlDecoder().decode(payload);
+                    String decodedString = new String(decodedBytes);
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(decodedString);
+                    if (node.has("sub")) {
+                        return Long.parseLong(node.get("sub").asText());
+                    }
+                }
+            } catch (Exception e) {
+                // Log error
+            }
+        }
+        return null;
     }
 }
