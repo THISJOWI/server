@@ -37,7 +37,7 @@ public class OtpService {
         return otpRepository.findById(id);
     }
 
-    public otp createOtp(Long userId, String user, String type, long validitySeconds, String secret) {
+    public otp createOtp(Long userId, String name, String type, String secret, String issuer, Integer digits, Integer period, String algorithm) {
         // Check for duplicates if secret is provided
         if (secret != null && !secret.isEmpty()) {
             String normalizedSecret = secret.trim().replace(" ", "").toUpperCase();
@@ -56,28 +56,29 @@ public class OtpService {
 
         otp o = new otp();
         o.setUserId(userId);
-        o.setUsername(user);
+        o.setUsername(name);
         o.setType(type);
-        o.setValid(true);
-        o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);
         o.setSecret((secret != null && !secret.isEmpty()) ? secret : generateSecret());
+        o.setIssuer(issuer);
+        o.setDigits(digits);
+        o.setPeriod(period);
+        o.setAlgorithm(algorithm);
+        o.setValid(true);
+        o.setExpiresAt(System.currentTimeMillis() + (period != null ? period * 1000L : 30000L)); // Default 30s if null
+
         otp saved = otpRepository.save(o);
         
-        // Send Kafka event when OTP is created
-        try {
-            OtpCreatedEvent event = new OtpCreatedEvent(
-                saved.getId(),
-                userId, // userId set from parameter
-                user,
-                type,
-                "OTP_CREATED",
-                Instant.now().getEpochSecond(),
-                saved.getExpiresAt()
-            );
-            kafkaProducerService.sendOtpCreatedEvent(event);
-        } catch (Exception e) {
-            logger.error("Error sending OTP created event to Kafka", e);
-        }
+        // Send event to Kafka
+        OtpCreatedEvent event = new OtpCreatedEvent(
+            saved.getId(), 
+            userId, 
+            name, 
+            type, 
+            "OTP_CREATED", 
+            System.currentTimeMillis(), 
+            saved.getExpiresAt()
+        );
+        kafkaProducerService.sendOtpCreatedEvent(event);
         
         return saved;
     }
@@ -91,7 +92,7 @@ public class OtpService {
         o.setUsername(username);
         o.setType(type);
         o.setValid(true);
-        o.setExpiresAt(Instant.now().getEpochSecond() + validitySeconds);
+        o.setExpiresAt(System.currentTimeMillis() + (validitySeconds * 1000));
         o.setSecret(generateSecret());
         otp saved = otpRepository.save(o);
         
@@ -103,7 +104,7 @@ public class OtpService {
                 username,
                 type,
                 "OTP_CREATED",
-                Instant.now().getEpochSecond(),
+                System.currentTimeMillis(),
                 saved.getExpiresAt()
             );
             kafkaProducerService.sendOtpCreatedEvent(event);
@@ -126,7 +127,7 @@ public class OtpService {
 
     public boolean validateOtp(Long id, String code) {
         Optional<otp> o = otpRepository.findById(id);
-        if (o.isPresent() && o.get().getValid() && o.get().getExpiresAt() > Instant.now().getEpochSecond()) {
+        if (o.isPresent() && o.get().getValid() && o.get().getExpiresAt() > System.currentTimeMillis()) {
             // Aquí deberías implementar la validación TOTP/HOTP real
             return o.get().getSecret().equals(code);
         }

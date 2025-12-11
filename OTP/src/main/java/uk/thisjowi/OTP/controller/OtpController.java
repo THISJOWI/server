@@ -47,25 +47,32 @@ public class OtpController {
     @PostMapping
     public ResponseEntity<otp> createOtp(
             @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestParam String user, 
-            @RequestParam String type, 
-            @RequestParam(defaultValue = "300") long validitySeconds,
-            @RequestParam(required = false) String secret) {
+            @RequestBody CreateOtpRequest request) {
         
         Long userId = extractUserIdFromToken(token);
         if (userId == null) {
             return ResponseEntity.status(401).build();
         }
         
-        if (secret != null && !secret.isEmpty()) {
+        if (request.secret != null && !request.secret.isEmpty()) {
              // Log masked secret for debugging
-             String masked = secret.length() > 4 ? "..." + secret.substring(secret.length() - 4) : "***";
+             String masked = request.secret.length() > 4 ? "..." + request.secret.substring(request.secret.length() - 4) : "***";
              System.out.println("Received createOtp request for user " + userId + " with secret: " + masked);
         } else {
              System.out.println("Received createOtp request for user " + userId + " without secret");
         }
         
-        return ResponseEntity.ok(otpService.createOtp(userId, user, type, validitySeconds, secret));
+        return ResponseEntity.ok(otpService.createOtp(userId, request.name, request.type, request.secret, request.issuer, request.digits, request.period, request.algorithm));
+    }
+
+    public static class CreateOtpRequest {
+        public String name;
+        public String issuer;
+        public String secret;
+        public Integer digits;
+        public Integer period;
+        public String algorithm;
+        public String type;
     }
 
     @PutMapping("/{id}")

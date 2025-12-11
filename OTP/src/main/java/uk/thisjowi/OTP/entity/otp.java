@@ -34,6 +34,18 @@ public class otp {
     @Column(nullable = false)
     private String type; // TOTP, HOTP
 
+    @Column(nullable = true)
+    private String issuer;
+
+    @Column(nullable = true)
+    private Integer digits;
+
+    @Column(nullable = true)
+    private Integer period;
+
+    @Column(nullable = true)
+    private String algorithm;
+
     @Column(nullable = false)
     private Boolean valid;
 
