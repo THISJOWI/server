@@ -1,0 +1,16 @@
+spring:
+  cloud:
+    config:
+      enabled: false
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+jwt:
+  secret: mySuperSecretKeyForTestingPurposesOnly1234567890
+  expiration: 3600000
+kafka:
+  bootstrap-servers: localhost:9092

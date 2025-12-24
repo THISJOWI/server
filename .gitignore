@@ -32,3 +32,5 @@ credentials/
 # OS
 .DS_Store
 Thumbs.db
+
+Messages/*

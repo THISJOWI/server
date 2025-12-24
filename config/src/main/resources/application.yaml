@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: config
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/THISJOWI/configuration
+          default-label: master
+          clone-on-start: true
+          force-pull: true
+          timeout: 10
+          search-paths: '{application}'
+        # overrides:
+
+server:
+  port: 8888
+  address: 0.0.0.0
+
+# Registro en Eureka
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: false
+    hostname: ${spring.application.name}
+
+# Actuator para monitoreo
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,refresh
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
