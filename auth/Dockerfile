@@ -9,7 +9,7 @@
 ################################################################################
 
 # Create a stage for resolving and downloading dependencies.
-FROM eclipse-temurin:21-jdk-jammy as deps
+FROM eclipse-temurin:21-jdk-jammy AS deps
 
 WORKDIR /build
 
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/root/.gradle ./gradlew dependencies --no-daemon
 ################################################################################
 
 # Create a stage for building the application based on the stage with downloaded dependencies.
-FROM deps as package
+FROM deps AS package
 
 WORKDIR /build
 

@@ -39,8 +39,6 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/v1/auth/register",
                     "/api/v1/auth/login",
-                    "/api/auth/register",
-                    "/api/auth/login",
                     "/register",
                     "/login",
                     "/favicon.ico"
@@ -48,7 +46,7 @@ public class SecurityConfig {
                 // Token and user validation routes
                 .requestMatchers(
                     "/api/v1/auth/user",
-                    "/api/auth/validate"
+                    "/api/v1/auth/validate"
                 ).permitAll()
                 // Documentation routes
                 .requestMatchers(

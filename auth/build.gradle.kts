@@ -1,7 +1,7 @@
 plugins {
 	java
 	eclipse
-	id("org.springframework.boot") version "3.5.9"
+	id("org.springframework.boot") version "3.4.1"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -25,7 +25,7 @@ repositories {
 	mavenCentral()
 }
 
-extra["springCloudVersion"] = "2025.0.1"
+extra["springCloudVersion"] = "2024.0.0"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -45,11 +45,11 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 	// https://mvnrepository.com/artifact/org.apache.commons/commons-pool2
 	implementation("org.apache.commons:commons-pool2:2.13.0")
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-actuator
-	implementation("org.springframework.boot:spring-boot-actuator:4.0.1")
+	implementation("org.springframework.boot:spring-boot-actuator")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
