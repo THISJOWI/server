@@ -1,4 +1,4 @@
-package uk.thisjowi.Notes.Utils;
+package com.thisjowi.note.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

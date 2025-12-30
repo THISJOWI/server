@@ -1,7 +1,7 @@
-package uk.thisjowi.Notes.repository;
+package com.thisjowi.note.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import uk.thisjowi.Notes.entity.Note;
+import com.thisjowi.note.entity.Note;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;

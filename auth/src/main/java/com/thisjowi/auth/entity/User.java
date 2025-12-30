@@ -44,5 +44,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Account accountType;
 
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 
 }

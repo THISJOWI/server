@@ -58,14 +58,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 } catch (Exception ex) {
                     logger.error("Invalid JWT token: {}", ex.getMessage());
                     SecurityContextHolder.clearContext();
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
-                    return;
                 }
             }
         } catch (Exception ex) {
             logger.error("Error in JWT authentication filter: {}", ex.getMessage());
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication error");
-            return;
         }
 
         filterChain.doFilter(request, response);

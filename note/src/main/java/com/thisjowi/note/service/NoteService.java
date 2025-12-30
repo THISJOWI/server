@@ -1,11 +1,10 @@
-// ...existing code...
-package uk.thisjowi.Notes.service;
+package com.thisjowi.note.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.thisjowi.Notes.Utils.EncryptionUtil;
-import uk.thisjowi.Notes.entity.Note;
-import uk.thisjowi.Notes.repository.NoteRepository;
+import com.thisjowi.note.Utils.EncryptionUtil;
+import com.thisjowi.note.entity.Note;
+import com.thisjowi.note.repository.NoteRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,4 +1,4 @@
-package uk.thisjowi.Notes.kafka;
+package com.thisjowi.note.kafka;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.kafka.annotation.KafkaListener;

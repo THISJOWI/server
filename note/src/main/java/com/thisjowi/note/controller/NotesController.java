@@ -1,14 +1,14 @@
-package uk.thisjowi.Notes.controller;
+package com.thisjowi.note.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uk.thisjowi.Notes.entity.Note;
-import uk.thisjowi.Notes.repository.NoteRepository;
-import uk.thisjowi.Notes.service.NoteService;
-import uk.thisjowi.Notes.service.AuthenticationClient;
-import uk.thisjowi.Notes.kafka.KafkaConsumerService;
+import com.thisjowi.note.entity.Note;
+import com.thisjowi.note.repository.NoteRepository;
+import com.thisjowi.note.service.NoteService;
+import com.thisjowi.note.service.AuthenticationClient;
+import com.thisjowi.note.kafka.KafkaConsumerService;
 
 import java.util.List;
 import java.util.Optional;

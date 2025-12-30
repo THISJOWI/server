@@ -1,4 +1,4 @@
-package uk.thisjowi.Notes.entity;
+package com.thisjowi.note.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

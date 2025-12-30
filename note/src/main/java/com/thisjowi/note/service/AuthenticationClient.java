@@ -1,4 +1,4 @@
-package uk.thisjowi.Notes.service;
+package com.thisjowi.note.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
