@@ -4,7 +4,7 @@ metadata:
   name: cockroachdb
 spec:
   serviceName: cockroachdb
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: cockroachdb
@@ -25,11 +25,10 @@ spec:
           - "/bin/bash"
           - "-ecx"
           - |
-            exec /cockroach/cockroach start \
+            exec /cockroach/cockroach start-single-node \
             --insecure \
             --advertise-host=$(hostname -f) \
             --http-addr=0.0.0.0:8080 \
-            --join=cockroachdb-0.cockroachdb,cockroachdb-1.cockroachdb,cockroachdb-2.cockroachdb \
             --cache=25% \
             --max-sql-memory=25%
         volumeMounts:

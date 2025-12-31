@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: password
-          image: thsjowi/password:latest
+          image: thsjowi/password:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8084

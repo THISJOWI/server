@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: notes
-          image: thsjowi/notes:latest
+          image: thsjowi/note:1.0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 8083

@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: auth-ingress
+  name: ingress
 spec:
   ingressClassName: public
   rules:
@@ -23,3 +23,31 @@ spec:
             name: notes
             port:
               number: 80
+  - http:
+     paths:
+     - path: /api/v1/passwords
+       pathType: Prefix
+       backend:
+         service:
+           name: password
+           port:
+             number: 80
+  - http:
+     paths:
+     - path: /api/v1/otp
+       pathType: Prefix
+       backend:
+         service:
+           name: otp
+           port:
+             number: 80
+  - http:
+     paths:
+     - path: /cockroachdb
+       pathType: Prefix
+       backend:
+         service:
+           name: cockroachdb
+           port:
+             number: 80
+  
