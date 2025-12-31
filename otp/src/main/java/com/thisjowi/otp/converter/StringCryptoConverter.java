@@ -1,0 +1,19 @@
+package com.thisjowi.otp.converter;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import com.thisjowi.otp.util.EncryptionUtil;
+
+@Converter
+public class StringCryptoConverter implements AttributeConverter<String, String> {
+
+    @Override
+    public String convertToDatabaseColumn(String attribute) {
+        return EncryptionUtil.encrypt(attribute);
+    }
+
+    @Override
+    public String convertToEntityAttribute(String dbData) {
+        return EncryptionUtil.decrypt(dbData);
+    }
+}
