@@ -5,9 +5,9 @@ set -e
 echo "Applying Kubernetes Secret..."
 kubectl apply -f ../k8s/utils/secret.example.yaml
 
-# -- INGRESS CONTROLLER --
-echo "Applying Kubernetes Ingress Controller..."
-kubectl apply -f ../k8s/utils/ingress-controller.yaml
+# -- INGRESS --
+echo "Applying Kubernetes Ingress..."
+kubectl apply -f ../k8s/utils/ingress.yaml
 sleep 15
 
 # -- KAFKA --
@@ -18,9 +18,7 @@ sleep 30
 # -- DATABASES --
 echo "Applying Kubernetes Databases..."
 kubectl apply -f ../k8s/databases/cockroachdb/statefulset.yaml
-kubectl apply -f ../k8s/databases/cockroachdb/node.yaml
 kubectl apply -f ../k8s/databases/cockroachdb/cluster.yaml
-kubectl apply -f ../k8s/databases/mongodb/job.yaml
 sleep 30
 
 kubectl apply -f ../k8s/databases/keys-db/config.yaml
@@ -36,21 +34,6 @@ kubectl apply -f ../k8s/application/server/config/service.yaml
 
 # -- CONFIG SERVER WAIT --
 kubectl wait --for=condition=available deploy/config-server --timeout=300s
-
-# -- DISCOVERY SERVER --
-echo "Applying Kubernetes Discovery Server..."
-kubectl apply -f ../k8s/application/server/discovery/deploy.yaml
-kubectl apply -f ../k8s/application/server/discovery/node.yaml
-kubectl apply -f ../k8s/application/server/discovery/cluster.yaml
-
-# -- DISCOVERY SERVER WAIT --
-kubectl wait --for=condition=available deploy/eureka-server --timeout=300s
-
-# -- API GATEWAY --
-echo "Applying Kubernetes API Gateway..."
-kubectl apply -f ../k8s/application/server/api/deploy.yaml
-kubectl apply -f ../k8s/application/server/api/node.yaml
-kubectl apply -f ../k8s/application/server/api/cluster.yaml
 
 # -- AUTHENTICATION SERVICE --
 echo "Applying Kubernetes Authentication Service..."
