@@ -20,11 +20,14 @@ public class EncryptionUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(EncryptionUtil.class);
     
-    private static byte[] secretKeyBytes;
+    private final byte[] secretKeyBytes;
     private static final int AES_KEY_SIZE = 32; // 256 bits
     private static final int IV_SIZE = 16; // 128 bits for AES
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String KEY_ALGORITHM = "AES";
+    
+    // Static instance for static method access (initialized by Spring)
+    private static EncryptionUtil instance;
 
     /**
      * Initialize encryption utility with secret key from application.yml configuration.
@@ -32,7 +35,7 @@ public class EncryptionUtil {
      * 
      * @param secretKey the encryption secret key (minimum 32 characters)
      */
-    public EncryptionUtil(@Value("${jwt.secret}") String secretKey) {
+    public EncryptionUtil(@Value("${jwt.secret:}") String secretKey) {
         if (secretKey == null || secretKey.trim().isEmpty()) {
             logger.warn("[Encryption] No encryption key provided, using development default");
             secretKey = "default-dev-secret-key-at-least-32-characters-long";
@@ -43,8 +46,12 @@ public class EncryptionUtil {
         }
         
         // Generate consistent key bytes using SHA-256
-        secretKeyBytes = generateKeyBytes(secretKey);
-        logger.info("[Encryption] Encryption utility initialized successfully with key length: {} chars -> {} bits", secretKey.length(), secretKeyBytes.length * 8);
+        this.secretKeyBytes = generateKeyBytes(secretKey);
+        
+        // Set static instance for static method access
+        instance = this;
+        
+        logger.info("[Encryption] Encryption utility initialized successfully with key length: {} chars -> {} bits", secretKey.length(), this.secretKeyBytes.length * 8);
     }
 
     /**
@@ -68,6 +75,9 @@ public class EncryptionUtil {
      * @throws RuntimeException if encryption fails
      */
     public static String encrypt(String plaintext) {
+        if (instance == null) {
+            throw new IllegalStateException("EncryptionUtil not initialized. Ensure Spring context is loaded.");
+        }
         if (plaintext == null || plaintext.isEmpty()) {
             logger.warn("[Encryption] Attempt to encrypt null or empty plaintext");
             return plaintext;
@@ -81,7 +91,7 @@ public class EncryptionUtil {
 
             // Create cipher
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(secretKeyBytes, 0, AES_KEY_SIZE, KEY_ALGORITHM);
+            SecretKeySpec keySpec = new SecretKeySpec(instance.secretKeyBytes, 0, AES_KEY_SIZE, KEY_ALGORITHM);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
 
@@ -111,6 +121,9 @@ public class EncryptionUtil {
      * @throws RuntimeException if decryption fails
      */
     public static String decrypt(String encryptedText) {
+        if (instance == null) {
+            throw new IllegalStateException("EncryptionUtil not initialized. Ensure Spring context is loaded.");
+        }
         if (encryptedText == null || encryptedText.isBlank()) {
             logger.warn("[Encryption] Attempt to decrypt null or empty text");
             return encryptedText;
@@ -142,7 +155,7 @@ public class EncryptionUtil {
 
             // Create cipher
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            SecretKeySpec keySpec = new SecretKeySpec(secretKeyBytes, 0, AES_KEY_SIZE, KEY_ALGORITHM);
+            SecretKeySpec keySpec = new SecretKeySpec(instance.secretKeyBytes, 0, AES_KEY_SIZE, KEY_ALGORITHM);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
 
