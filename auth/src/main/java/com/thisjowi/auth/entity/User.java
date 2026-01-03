@@ -17,6 +17,8 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    private String fullName;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -43,6 +45,7 @@ public class User {
     @Column(nullable = true)
     @Enumerated(EnumType.STRING)
     private Account accountType;
+
 
     @PrePersist
     protected void onCreate() {

@@ -96,6 +96,7 @@ public class AuthRestController {
     public ResponseEntity<?> apiRegister(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         String password = body.get("password");
+        String fullName = body.get("fullName");
         String country = body.get("country");
         String birthdateStr = body.get("birthdate");
         String accountTypeStr = body.get("accountType");
@@ -114,6 +115,17 @@ public class AuthRestController {
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
+        
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            user.setFullName(fullName.trim());
+        } else {
+            // Fallback or error? Since it is nullable=false in DB, we should probably require it or set a default.
+            // For now, let's set it to empty string or part of email if missing to avoid DB error, 
+            // but ideally the frontend should send it.
+            // Given the user just asked to "add" it, I'll assume they will start sending it.
+            // Let's default to "User" or extract from email if not provided to be safe.
+            user.setFullName(email.split("@")[0]);
+        }
         
         if (country != null && !country.trim().isEmpty()) {
             user.setCountry(country.trim());

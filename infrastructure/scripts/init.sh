@@ -28,30 +28,29 @@ kubectl apply -f ../k8s/databases/keys-db/service.yaml
 sleep 30
 
 # -- CONFIG SERVER --
-echo "Applying Kubernetes Config Server..."
-kubectl apply -f ../k8s/application/server/config/deploy.yaml
-kubectl apply -f ../k8s/application/server/config/service.yaml
+echo "Applying Kubernetes Config..."
+kubectl apply -f ../k8s/application/config/deploy.yaml
+kubectl apply -f ../k8s/application/config/service.yaml
 
 # -- CONFIG SERVER WAIT --
 kubectl wait --for=condition=available deploy/config-server --timeout=300s
 
 # -- AUTHENTICATION SERVICE --
-echo "Applying Kubernetes Authentication Service..."
-kubectl apply -f ../k8s/application/service/auth/deploy.yaml
-kubectl apply -f ../k8s/application/service/auth/service.yaml
+echo "Applying Kubernetes Authentication..."
+kubectl apply -f ../k8s/application/auth/deploy.yaml
+kubectl apply -f ../k8s/application/auth/service.yaml
 
 # -- NOTES SERVICE --
-echo "Applying Kubernetes Notes Service..."
-kubectl apply -f ../k8s/application/service/notes/deploy.yaml
-kubectl apply -f ../k8s/application/service/notes/service.yaml
+echo "Applying Kubernetes Notes..."
+kubectl apply -f ../k8s/application/notes/deploy.yaml
+kubectl apply -f ../k8s/application/notes/service.yaml
 
 # -- PASSWORD SERVICE --
-echo "Applying Kubernetes Password Service..."
-kubectl apply -f ../k8s/application/service/password/deploy.yaml
-kubectl apply -f ../k8s/application/service/password/service.yaml
+echo "Applying Kubernetes Password..."
+kubectl apply -f ../k8s/application/password/deploy.yaml
+kubectl apply -f ../k8s/application/password/service.yaml
 
 # -- OTP SERVICE --
-echo "Applying Kubernetes OTP Service..."
-kubectl apply -f ../k8s/application/service/otp/deploy.yaml
-kubectl apply -f ../k8s/application/service/otp/service.yaml
-
+echo "Applying Kubernetes OTP..."
+kubectl apply -f ../k8s/application/otp/deploy.yaml
+kubectl apply -f ../k8s/application/otp/service.yaml
