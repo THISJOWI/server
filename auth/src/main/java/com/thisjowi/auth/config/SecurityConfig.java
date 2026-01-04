@@ -38,6 +38,8 @@ public class SecurityConfig {
                 // Public-specific routes
                 .requestMatchers(
                     "/api/v1/auth/register",
+                    "/api/v1/auth/initiate-register",
+                    "/api/v1/auth/resend-verification",
                     "/api/v1/auth/login",
                     "/register",
                     "/login",

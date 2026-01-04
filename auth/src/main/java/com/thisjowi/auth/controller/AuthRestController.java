@@ -28,6 +28,8 @@ import com.thisjowi.auth.dto.ChangePasswordRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.thisjowi.auth.entity.User;
 import java.util.Random;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -39,13 +41,15 @@ public class AuthRestController {
     private final JwtUtil jwtUtil;
     private final ChangePasswordService changePasswordService;
     private final EmailService emailService;
+    private final StringRedisTemplate redisTemplate;
     private final Logger log = LoggerFactory.getLogger(AuthRestController.class);
 
     public AuthRestController(AuthenticationManager authenticationManager,
                               UserRepository userRepository, PasswordEncoder passwordEncoder,
                               UserService userService, JwtUtil jwtUtil,
                               ChangePasswordService changePasswordService,
-                              EmailService emailService) {
+                              EmailService emailService,
+                              StringRedisTemplate redisTemplate) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -53,6 +57,7 @@ public class AuthRestController {
         this.jwtUtil = jwtUtil;
         this.changePasswordService = changePasswordService;
         this.emailService = emailService;
+        this.redisTemplate = redisTemplate;
     }
 
     @PostMapping("/login")
@@ -97,10 +102,47 @@ public class AuthRestController {
         }
     }
 
+    @PostMapping("/initiate-register")
+    public ResponseEntity<?> apiInitiateRegister(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email is required"));
+        }
+        
+        if (userRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("success", false, "message", "Email already exists"));
+        }
+
+        String verificationCode = generateVerificationCode();
+        // Store in Redis with 10 minutes TTL
+        redisTemplate.opsForValue().set("REG_OTP:" + email, verificationCode, 10, TimeUnit.MINUTES);
+        
+        try {
+            emailService.sendVerificationEmail(email, verificationCode);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Verification code sent"));
+        } catch (Exception e) {
+            log.error("Failed to send email", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to send verification email"));
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> apiRegister(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         String password = body.get("password");
+        String otp = body.get("otp");
+        
+        if (otp == null || otp.trim().isEmpty()) {
+             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "OTP is required"));
+        }
+        
+        String storedOtp = redisTemplate.opsForValue().get("REG_OTP:" + email);
+        if (storedOtp == null || !storedOtp.equals(otp)) {
+             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid or expired OTP"));
+        }
+
         String fullName = body.get("fullName");
         String country = body.get("country");
         String birthdateStr = body.get("birthdate");
@@ -187,20 +229,25 @@ public class AuthRestController {
         }
 
         // Generate verification code
-        String verificationCode = generateVerificationCode();
-        user.setVerificationCode(verificationCode);
-        user.setVerified(false);
+        // String verificationCode = generateVerificationCode();
+        // user.setVerificationCode(verificationCode);
+        user.setVerified(true); // Verified via OTP before creation
 
         user.setLastLogin(LocalDate.now());
         user = userService.saveUser(user);
+        
+        // Clear OTP
+        redisTemplate.delete("REG_OTP:" + email);
 
-        // Send verification email
+        // Send verification email - NO, already verified
+        /*
         try {
             emailService.sendVerificationEmail(user.getEmail(), verificationCode);
         } catch (Exception e) {
             log.error("Failed to send verification email to {}", user.getEmail(), e);
             // We don't fail registration if email fails, but user might need to resend
         }
+        */
 
         // Generate token on register as well so clients can use it immediately
         String jwtToken = jwtUtil.generateToken(user.getId(), user.getEmail());
@@ -250,22 +297,19 @@ public class AuthRestController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email is required"));
         }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.isVerified()) {
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User already verified"));
+        if (userRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User already registered"));
         }
 
         String verificationCode = generateVerificationCode();
-        user.setVerificationCode(verificationCode);
-        userRepository.save(user);
+        // Store in Redis with 10 minutes TTL
+        redisTemplate.opsForValue().set("REG_OTP:" + email, verificationCode, 10, TimeUnit.MINUTES);
 
         try {
-            emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+            emailService.sendVerificationEmail(email, verificationCode);
             return ResponseEntity.ok(Map.of("success", true, "message", "Verification email sent"));
         } catch (Exception e) {
-            log.error("Failed to send verification email to {}", user.getEmail(), e);
+            log.error("Failed to send verification email to {}", email, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("success", false, "message", "Failed to send email"));
         }
