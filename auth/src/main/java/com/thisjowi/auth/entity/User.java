@@ -46,6 +46,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Account accountType;
 
+    @Column(name = "verification_code")
+    private String verificationCode;
+
+    @Column(name = "is_verified", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean isVerified = false;
 
     @PrePersist
     protected void onCreate() {

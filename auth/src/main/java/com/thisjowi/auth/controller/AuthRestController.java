@@ -21,11 +21,13 @@ import com.thisjowi.auth.entity.Account;
 import com.thisjowi.auth.repository.UserRepository;
 import com.thisjowi.auth.service.UserService;
 import com.thisjowi.auth.service.ChangePasswordService;
+import com.thisjowi.auth.service.EmailService;
 import com.thisjowi.auth.utils.JwtUtil;
 import com.thisjowi.auth.dto.ChangePasswordRequest;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.thisjowi.auth.entity.User;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -36,18 +38,21 @@ public class AuthRestController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final ChangePasswordService changePasswordService;
+    private final EmailService emailService;
     private final Logger log = LoggerFactory.getLogger(AuthRestController.class);
 
     public AuthRestController(AuthenticationManager authenticationManager,
                               UserRepository userRepository, PasswordEncoder passwordEncoder,
                               UserService userService, JwtUtil jwtUtil,
-                              ChangePasswordService changePasswordService) {
+                              ChangePasswordService changePasswordService,
+                              EmailService emailService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.changePasswordService = changePasswordService;
+        this.emailService = emailService;
     }
 
     @PostMapping("/login")
@@ -181,8 +186,21 @@ public class AuthRestController {
             user.setDeploymentType(Deployment.Cloud); // Default
         }
 
+        // Generate verification code
+        String verificationCode = generateVerificationCode();
+        user.setVerificationCode(verificationCode);
+        user.setVerified(false);
+
         user.setLastLogin(LocalDate.now());
         user = userService.saveUser(user);
+
+        // Send verification email
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}", user.getEmail(), e);
+            // We don't fail registration if email fails, but user might need to resend
+        }
 
         // Generate token on register as well so clients can use it immediately
         String jwtToken = jwtUtil.generateToken(user.getId(), user.getEmail());
@@ -190,6 +208,67 @@ public class AuthRestController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("success", true, "email", user.getEmail(), "token", jwtToken));
+    }
+
+    private String generateVerificationCode() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+
+        if (email == null || code == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email and code are required"));
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isVerified()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User already verified"));
+        }
+
+        if (code.equals(user.getVerificationCode())) {
+            user.setVerified(true);
+            user.setVerificationCode(null); // Clear code after successful verification
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Email verified successfully"));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Invalid verification code"));
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+
+        if (email == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Email is required"));
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isVerified()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "User already verified"));
+        }
+
+        String verificationCode = generateVerificationCode();
+        user.setVerificationCode(verificationCode);
+        userRepository.save(user);
+
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), verificationCode);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Verification email sent"));
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}", user.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Failed to send email"));
+        }
     }
 
     @GetMapping("/user")

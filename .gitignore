@@ -1,5 +1,6 @@
 # Archivos de secretos - NO SUBIR A GIT
 kubernetes/utils/secret.yaml
+infrastructure/k8s/utils/secret.yaml
 kubernetes/templates/
 
 # Logs y archivos temporales

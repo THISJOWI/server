@@ -4,6 +4,7 @@ metadata:
   name: auth
   annotations:
     linkerd.io/inject: enabled
+    onfig.linkerd.io/proxy-await: "enabled"
 spec:
   replicas: 1
   selector:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: thsjowi/auth:1.0.1
+          image: thsjowi/auth:1.2.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
@@ -76,3 +77,19 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: jwt-secret
+            - name: MAILTRAP_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mailtrap-api-token
+            - name: MAILTRAP_SENDER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mailtrap-sender-email
+            - name: MAILTRAP_SENDER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mailtrap-sender-name
+

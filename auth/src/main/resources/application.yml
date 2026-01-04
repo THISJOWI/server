@@ -1,6 +1,0 @@
-mailtrap:
-  api:
-    token: ${MAILTRAP_API_TOKEN:your_mailtrap_api_token}
-  sender:
-    email: ${MAILTRAP_SENDER_EMAIL:sender@example.com}
-    name: ${MAILTRAP_SENDER_NAME:Auth Service}
