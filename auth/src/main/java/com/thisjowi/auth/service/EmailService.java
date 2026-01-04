@@ -9,6 +9,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.StreamUtils;
+import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import jakarta.annotation.PostConstruct;
 
 import java.util.Collections;
@@ -73,7 +77,7 @@ public class EmailService {
 
         body.put("subject", "Verify your email");
         body.put("text", "Please verify your email using this token: " + verificationToken);
-        body.put("html", "<p>Please verify your email using this token: <strong>" + verificationToken + "</strong></p>");
+        body.put("html", getVerificationEmailTemplate(verificationToken));
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
@@ -87,6 +91,18 @@ public class EmailService {
         } catch (Exception e) {
             log.error("Error occurred while sending email to {}: {}", to, e.getMessage());
             throw e;
+        }
+    }
+
+    private String getVerificationEmailTemplate(String token) {
+        try {
+            ClassPathResource resource = new ClassPathResource("templates/verification-email.html");
+            String template = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+            return template.replace("{{verificationToken}}", token);
+        } catch (IOException e) {
+            log.error("Error loading email template", e);
+            // Fallback to simple HTML if template loading fails
+            return "<p>Please verify your email using this token: <strong>" + token + "</strong></p>";
         }
     }
 }
